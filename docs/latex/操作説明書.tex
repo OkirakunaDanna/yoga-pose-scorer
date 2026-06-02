@@ -1,0 +1,265 @@
+%! lualatex
+\documentclass[a4paper,11pt]{ltjsarticle}
+
+\title{ヨガポーズ採点 Web アプリ\\操作説明書}
+\author{利用者向け（インストラクター・自習者）}
+\date{2026-06-02 \quad 版 1.0}
+
+\input{common.tex}
+\setdoctype{操作説明書}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\noindent
+\textbf{本番 URL}: \url{https://yoga-pose-scorer.vercel.app}
+
+\tableofcontents
+\newpage
+
+\section{このアプリでできること}
+
+\begin{itemize}
+  \item スマホや PC のカメラで、ヨガのポーズを\textbf{リアルタイム}で採点します
+  \item \textbf{3 種類}のポーズに対応（木のポーズ / 戦士のポーズ2 / 下向きの犬）
+  \item 映像は\textbf{あなたの端末の中だけ}で処理（サーバーに送りません）
+\end{itemize}
+
+採点はあくまで\textbf{目安}です。体調に合わせ、無理のない範囲でご利用ください。
+
+\section{動作環境}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    項目 & 要件 \\
+    \midrule
+    ブラウザ & Chrome、Safari、Edge、Firefox など最新版 \\
+    接続 & インターネット（初回のみ AI モデルのダウンロード） \\
+    カメラ & 内蔵または外付け Web カメラ \\
+    HTTPS & 本番サイトは HTTPS のためカメラ利用可 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{注意}: \code{http://} の一般サイトではカメラが使えないことがあります。本番 URL（\url{https://yoga-pose-scorer.vercel.app}）をご利用ください。
+
+\section{画面の見方}
+
+\begin{asciibox}
++---------------------------------------------+
+|  ヨガポーズ採点                              |
+|  （説明文）                                  |
++---------------------------------------------+
+|  練習するポーズ  [v 木のポーズ    ]          |
+|  ポーズの説明…                               |
++----------------------+----------------------+
+|                      |   78 点              |
+|   カメラ映像          |   良い               |
+|   （骨格の線）        |   軸足… 85点         |
+|                      |   上げた足… 72点     |
+|  [カメラを開始]       |   （各項目の詳細）    |
++----------------------+----------------------+
+\end{asciibox}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    場所 & 内容 \\
+    \midrule
+    上 & タイトル・ポーズの選び方 \\
+    左（大きい枠） & カメラ映像。骨格が緑色の線で重なる \\
+    右のパネル & \textbf{総合スコア}と\textbf{項目ごとの点数・フィードバック} \\
+    下 & 利用上の注意 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+スマホなど狭い画面では、\textbf{右のパネルが下に表示}されます。スコアが見えないときは\textbf{下にスクロール}してください。
+
+\section{基本的な使い方}
+
+\subsection{ステップ 1 --- サイトを開く}
+
+ブラウザで次の URL を開きます。
+
+\noindent\textbf{\url{https://yoga-pose-scorer.vercel.app}}
+
+\subsection{ステップ 2 --- ポーズを選ぶ}
+
+「\textbf{練習するポーズ}」のプルダウンから練習したいポーズを選びます。
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    ポーズ名 & ざっくりした形 \\
+    \midrule
+    木のポーズ & 片足で立ち、もう一方の足を内ももに \\
+    戦士のポーズ2 & 前足の膝を曲げ、腕を左右に伸ばす \\
+    下向きの犬 & 手と足で床を押し、お尻を上げた逆 V 字 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+選ぶと、その下に短い説明が表示されます。
+
+\subsection{ステップ 3 --- カメラを開始する}
+
+\begin{enumerate}
+  \item \textbf{「カメラを開始」}をタップ／クリック
+  \item ブラウザから\textbf{カメラの使用を許可}
+  \item 初回のみ\textbf{「モデル読み込み中…」}と表示されることがある（数十秒の場合あり）
+\end{enumerate}
+
+許可を拒否した場合は、ブラウザの設定からこのサイトのカメラを許可し、ページを再読み込みしてください。
+
+\subsection{ステップ 4 --- ポーズをとる}
+
+\begin{itemize}
+  \item カメラから\textbf{2--3\,m 程度}離れ、\textbf{頭から足まで}が画面に入るようにする
+  \item 明るい場所で、体のラインが隠れない服装がおすすめ
+  \item 画面は鏡のように左右反転（見慣れた向き）
+\end{itemize}
+
+骨格の線（緑）が体に沿って表示されれば、検出できています。
+
+\subsection{ステップ 5 --- スコアを確認する}
+
+\textbf{右側のパネル}（スマホでは下）を見ます。
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    表示 & 意味 \\
+    \midrule
+    大きい数字 + 「点」 & 総合スコア（0--100） \\
+    その下の短い文 & 総合評価（例: 素晴らしい / 良い） \\
+    リストの各項目 & 部位ごとの点数 \\
+    「現在 ○° / 目標 ○° --- …」 & 今の角度とアドバイス \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+総合スコアが\textbf{「---」}のまま、「全身を映してください」と出る場合は、距離やカメラの向きを調整してください。
+
+\subsection{ステップ 6 --- 終了する}
+
+\textbf{「カメラを停止」}でカメラをオフにできます。ブラウザのタブを閉じてもカメラは停止します。
+
+\section{スコア・フィードバックの読み方}
+
+\subsection{総合スコアの目安}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    点数 & 表示される評価 \\
+    \midrule
+    85 点以上 & 素晴らしい \\
+    70 点以上 & 良い \\
+    50 点以上 & もう一息 \\
+    50 点未満 & 調整しましょう \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{項目ごとの表示例}
+
+\begin{asciibox}
+軸足（左）の伸展          85点
+現在 172° / 目標 175° — とても良いです
+\end{asciibox}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    部分 & 説明 \\
+    \midrule
+    現在 ○° & カメラが検出した今の角度 \\
+    目標 ○° & このポーズで近づけたい角度 \\
+    最後の文 & 調整のヒント \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+よく出るヒント:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    ヒント & 意味 \\
+    \midrule
+    とても良いです & 目標にかなり近い \\
+    もう少し調整してみてください & あと少し \\
+    角度を少し大きく / 小さく & 関節をもう少し曲げる／伸ばす \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{左右について}
+
+現在のバージョンでは、\textbf{左足・右足がポーズごとに固定}されています（例: 木のポーズは「左が軸足」想定）。反対の足で行うと、項目名と実際の足が一致しないことがありますが、角度の数値は参考にできます。
+
+\section{うまくいかないとき}
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{@{}p{0.32\linewidth}p{0.58\linewidth}@{}}
+    \toprule
+    症状 & 対処 \\
+    \midrule
+    カメラが真っ暗 & 許可ダイアログで「許可」／設定 $\to$ プライバシー $\to$ カメラ \\
+    ずっと「モデル読み込み中」 & 回線を確認し、再読み込み（F5） \\
+    スコアが「---」のまま & 全身が入るよう距離・明るさを調整 \\
+    骨格線が乱れる & 逆光を避ける、体に物が重ならないようにする \\
+    点数が急に上下する & 正常。姿勢をキープすると安定 \\
+    初回だけ遅い & AI モデルのダウンロード。2 回目以降は速い \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{プライバシーについて}
+
+\begin{itemize}
+  \item カメラ映像は\textbf{あなたのブラウザ内}で処理
+  \item 当アプリのサーバーに\textbf{映像や録画を保存しない}
+  \item 初回に Google / jsDelivr 経由で AI モデルファイルを取得
+\end{itemize}
+
+\section{開発者向け（ローカルで試す場合）}
+
+\begin{lstlisting}
+cd /Users/waka/yoga-pose-scorer
+npm install
+npm run dev
+\end{lstlisting}
+
+ブラウザで \url{http://localhost:5173} を開きます。技術詳細は仕様書を参照してください。
+
+\section{お問い合わせ・フィードバック}
+
+仕様変更やポーズ追加の要望は、プロジェクト管理者（リポジトリオーナー）までご連絡ください。
+
+\section{改訂履歴}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    日付 & 版 & 内容 \\
+    \midrule
+    2026-06-02 & 1.0 & 初版 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\end{document}

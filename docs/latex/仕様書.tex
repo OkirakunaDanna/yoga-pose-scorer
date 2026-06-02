@@ -1,0 +1,341 @@
+%! lualatex
+\documentclass[a4paper,11pt]{ltjsarticle}
+
+\title{ヨガポーズ採点 Web アプリ\\仕様書}
+\author{yoga-pose-scorer}
+\date{2026-06-02 \quad 版 0.1}
+
+\input{common.tex}
+\setdoctype{仕様書}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    項目 & 内容 \\
+    \midrule
+    プロジェクト名 & yoga-pose-scorer \\
+    本番 URL & \url{https://yoga-pose-scorer.vercel.app} \\
+    版 & 0.0.0（初版） \\
+    最終更新 & 2026-06-02 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\tableofcontents
+\newpage
+
+\section{概要}
+
+\subsection{目的}
+
+ユーザーの Web カメラ映像から骨格（ポーズ）を推定し、選択したヨガポーズの関節角度が目標値にどれだけ近いかをリアルタイムで採点する。
+
+\subsection{対象ユーザー}
+
+\begin{itemize}
+  \item 自宅でヨガのフォームを確認したい初心者〜中級者
+  \item インストラクター補助として姿勢の目安を知りたい利用者
+\end{itemize}
+
+\subsection{スコープ}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}p{0.42\linewidth}p{0.42\linewidth}@{}}
+    \toprule
+    含む & 含まない \\
+    \midrule
+    ブラウザ内カメラ撮影 & サーバー側での映像保存・解析 \\
+    3 種類のポーズ採点 & 医療・診断用途の精度保証 \\
+    リアルタイムスコア表示 & ユーザーアカウント・履歴 DB \\
+    Vercel への静的ホスティング & 動画の録画・再生 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{機能要件}
+
+\subsection{画面構成}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    領域 & 内容 \\
+    \midrule
+    ヘッダー & タイトル、説明文 \\
+    ポーズ選択 & ドロップダウン、ポーズの短い説明 \\
+    メイン左 & カメラ映像 + 骨格オーバーレイ \\
+    メイン右 & 総合スコア、評価ラベル、項目別スコア・フィードバック \\
+    フッター & 利用上の注意、エラー表示 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{ポーズ一覧}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}llc@{}}
+    \toprule
+    ID & 表示名 & 採点項目数 \\
+    \midrule
+    \code{tree} & 木のポーズ & 2 \\
+    \code{warrior2} & 戦士のポーズ2 & 3 \\
+    \code{downward\_dog} & 下向きの犬 & 3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+左右の足・腕はポーズ定義で固定（例: 木のポーズは左が軸足）。反対側で行う場合の自動切り替えは未実装。
+
+\subsection{カメラ}
+
+\begin{itemize}
+  \item \code{getUserMedia} により前面カメラ（\code{facingMode: 'user'}）を使用
+  \item 解像度目標: 1280$\times$720（端末が対応する範囲）
+  \item 映像はミラー表示（左右反転）でユーザーが鏡のように確認できる
+  \item 「カメラを開始」「カメラを停止」で制御
+\end{itemize}
+
+\subsection{ポーズ検出}
+
+\begin{itemize}
+  \item \textbf{エンジン}: Google MediaPipe Pose Landmarker（\pkg{@mediapipe/tasks-vision}）
+  \item \textbf{モデル}: \code{pose\_landmarker\_lite}（float16）
+  \item \textbf{実行モード}: \code{VIDEO}（フレームごと \code{detectForVideo}）
+  \item \textbf{検出人数}: 1 人
+  \item \textbf{処理場所}: クライアント（ブラウザ）のみ。映像はサーバーに送信しない
+\end{itemize}
+
+初回起動時、WASM とモデルファイルを CDN からダウンロードする（数\,MB、回線次第で数十秒）。
+
+\subsection{採点ロジック}
+
+\subsubsection{関節角度}
+
+3 点（$a$---$b$---$c$）のうち、頂点 $b$ における角度（0--180°）を計算する。
+
+各ランドマークの \code{visibility} が 0.5 未満の場合はその項目を未検出とする。
+
+\subsubsection{項目スコア}
+
+\begin{lstlisting}
+diff = |測定角度 - 目標角度|
+項目スコア = max(0, min(100, 100 - (diff / tolerance) * 100))
+\end{lstlisting}
+
+\begin{itemize}
+  \item \code{target}: 目標角度（度）
+  \item \code{tolerance}: 満点から 0 点になるまでの許容幅（度）
+  \item \code{weight}: 総合スコアへの重み
+\end{itemize}
+
+\subsubsection{総合スコア}
+
+検出できた項目のみを対象に、重み付き平均を四捨五入した 0--100 点。
+
+1 項目も検出できない場合は \code{detected: false} とし、総合は「---」表示。
+
+\subsubsection{評価ラベル（総合）}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    総合スコア & ラベル \\
+    \midrule
+    85 以上 & 素晴らしい \\
+    70 以上 & 良い \\
+    50 以上 & もう一息 \\
+    50 未満 & 調整しましょう \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{フィードバック文言（項目別）}
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{@{}p{0.38\linewidth}p{0.48\linewidth}@{}}
+    \toprule
+    条件 & 文言 \\
+    \midrule
+    $|\mathrm{diff}| \le \mathrm{tolerance} \times 0.35$ & とても良いです \\
+    $|\mathrm{diff}| \le \mathrm{tolerance}$ & もう少し調整してみてください \\
+    測定 $>$ 目標 & 角度を少し小さく \\
+    測定 $<$ 目標 & 角度を少し大きく \\
+    未検出 & 全身がカメラに入るように立ってください \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{採点項目詳細}
+
+\subsubsection{木のポーズ（\code{tree}）}
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{@{}llccc@{}}
+    \toprule
+    項目 ID & ラベル & 目標 & 許容 & 重み \\
+    \midrule
+    standing\_leg & 軸足（左）の伸展 & 175° & 18° & 1.0 \\
+    lifted\_knee & 上げた足（右）の膝 & 55° & 28° & 1.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{戦士のポーズ2（\code{warrior2}）}
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{@{}llccc@{}}
+    \toprule
+    項目 ID & ラベル & 目標 & 許容 & 重み \\
+    \midrule
+    front\_knee & 前足（左）の膝 & 95° & 22° & 1.2 \\
+    back\_leg & 後足（右）の伸展 & 168° & 18° & 1.0 \\
+    left\_arm & 左腕の高さ & 88° & 28° & 0.85 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{下向きの犬（\code{downward\_dog}）}
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{@{}llccc@{}}
+    \toprule
+    項目 ID & ラベル & 目標 & 許容 & 重み \\
+    \midrule
+    hip\_fold & 腰の折り目（左） & 58° & 22° & 1.1 \\
+    left\_arm & 左腕の伸展 & 168° & 22° & 1.0 \\
+    left\_leg & 左脚の伸展 & 168° & 22° & 1.0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{非機能要件}
+
+\subsection{対応ブラウザ}
+
+\begin{itemize}
+  \item Chrome / Edge / Safari / Firefox の最新版を想定
+  \item \textbf{HTTPS 必須}（本番: Vercel）。\code{localhost} は開発時のみ HTTP 可
+  \item カメラ API と WebAssembly に対応した環境が必要
+\end{itemize}
+
+\subsection{パフォーマンス}
+
+\begin{itemize}
+  \item 採点は \code{requestAnimationFrame} ループ内で動画フレーム更新時のみ実行
+  \item GPU デリゲートを優先し、失敗時は CPU にフォールバック
+\end{itemize}
+
+\subsection{プライバシー}
+
+\begin{itemize}
+  \item 映像・骨格データは端末内で処理し、外部 API へ映像を送信しない
+  \item MediaPipe のモデル・WASM は Google CDN / jsDelivr から取得
+\end{itemize}
+
+\subsection{制限・免責}
+
+\begin{itemize}
+  \item 採点は\textbf{目安}であり、正確なヨガ指導・医学的評価を代替しない
+  \item 照明・服装・カメラ距離・遮蔽により精度が大きく変動する
+\end{itemize}
+
+\section{技術構成}
+
+\subsection{スタック}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    層 & 技術 \\
+    \midrule
+    UI & React 19 + TypeScript \\
+    ビルド & Vite 8 \\
+    ポーズ推定 & \pkg{@mediapipe/tasks-vision} 0.10.x \\
+    ホスティング & Vercel（静的サイト、\code{dist}） \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{ディレクトリ構成（主要）}
+
+\begin{lstlisting}
+src/
+  App.tsx                 # 画面全体
+  components/
+    PoseCamera.tsx        # カメラ・描画・検出ループ
+  hooks/
+    usePoseLandmarker.ts  # MediaPipe 初期化
+  lib/
+    landmarks.ts          # ランドマーク index
+    geometry.ts           # 角度・可視性
+    poses.ts              # ポーズ定義
+    scoring.ts            # 採点
+vercel.json               # SPA リライト
+\end{lstlisting}
+
+\subsection{外部依存 URL}
+
+\begin{table}[h]
+  \centering
+  \footnotesize
+  \begin{tabular}{@{}p{0.12\linewidth}p{0.78\linewidth}@{}}
+    \toprule
+    用途 & URL \\
+    \midrule
+    WASM & \url{https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm} \\
+    モデル & \url{https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{ビルド・デプロイ}
+
+\begin{lstlisting}
+npm run build    # tsc + vite build -> dist/
+vercel --prod    # 本番デプロイ
+\end{lstlisting}
+
+\code{vercel.json} で全パスを \code{index.html} にリライト（SPA）。
+
+\section{将来拡張（未実装）}
+
+\begin{itemize}
+  \item 左右の自動判定（ミラー・向きに応じた足の入れ替え）
+  \item ポーズの追加・管理画面
+  \item 練習履歴（LocalStorage / Supabase）
+  \item スクリーンショット・共有
+  \item 音声フィードバック
+\end{itemize}
+
+\section{改訂履歴}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    日付 & 版 & 内容 \\
+    \midrule
+    2026-06-02 & 0.1 & 初版作成 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\end{document}

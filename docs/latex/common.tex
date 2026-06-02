@@ -1,0 +1,67 @@
+% 共通プリアンブル（LuaLaTeX + 日本語）
+% ビルド: lualatex 対象ファイル.tex（2回推奨）
+
+\usepackage[hiragino-pron,deluxe]{luatexja-preset}
+\usepackage{geometry}
+\geometry{left=25mm,right=25mm,top=25mm,bottom=28mm}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{fancyvrb}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=teal!60!black,
+  urlcolor=teal!50!black,
+  pdfborder={0 0 0},
+}
+
+% フォントは luatexja-preset（hiragino-pron）で設定済み
+% Linux 等では common.tex 先頭を [noto-otf,deluxe] に変更してください
+\setsansjfont{Hiragino Sans}
+\setmonofont{Menlo}[Scale = 0.88]
+
+\lstset{
+  basicstyle = \ttfamily\small,
+  breaklines = true,
+  frame = single,
+  rulecolor = \color{black!15},
+  backgroundcolor = \color{black!3},
+  columns = fullflexible,
+  keepspaces = true,
+  showstringspaces = false,
+}
+
+\newcommand{\doctypemark}{}
+\newcommand{\setdoctype}[1]{\renewcommand{\doctypemark}{#1}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small\doctypemark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\setlist[itemize]{topsep=0.4em,itemsep=0.2em}
+\setlist[enumerate]{topsep=0.4em,itemsep=0.2em}
+
+\DefineVerbatimEnvironment{asciibox}{Verbatim}{%
+  fontsize=\small,
+  frame=single,
+  rulecolor=\color{black!20},
+  framesep=6pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+}
+
+\newcommand{\pkg}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
